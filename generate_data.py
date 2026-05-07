@@ -132,13 +132,23 @@ def generate_news():
         articles = fetch_category_news(category_key, config['query'], config['limit'])
         all_articles.extend(articles)
 
-    # Deduplicate by URL
+    # Deduplicate by URL AND normalized title (handles regional duplicates
+    # like me.pcmag.com vs uk.pcmag.com sharing the same article)
+    import re
     seen_urls = set()
+    seen_titles = set()
     unique = []
     for article in all_articles:
-        if article['url'] not in seen_urls:
-            seen_urls.add(article['url'])
-            unique.append(article)
+        url = article['url']
+        # Normalize title: lowercase, collapse whitespace, strip punctuation
+        norm_title = re.sub(r'[^\w\s]', '', (article['title'] or '').lower()).strip()
+        norm_title = re.sub(r'\s+', ' ', norm_title)
+
+        if url in seen_urls or norm_title in seen_titles:
+            continue
+        seen_urls.add(url)
+        seen_titles.add(norm_title)
+        unique.append(article)
 
     # Sort by published date (newest first)
     unique.sort(key=lambda x: x.get('published_at', ''), reverse=True)
