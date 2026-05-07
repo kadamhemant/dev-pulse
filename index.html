@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Live engineering news for developers. AI coding tools, testing automation, microservices, fintech, DevProd, security.">
+    <title>Dev Pulse — Live Engineering News</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Animated background -->
+    <div class="bg-gradient"></div>
+    <div class="bg-grid"></div>
+
+    <div class="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="brand">
+                    <div class="brand-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                        </svg>
+                    </div>
+                    <div class="brand-text">
+                        <h1>Dev Pulse</h1>
+                        <span class="brand-subtitle">Live Engineering News</span>
+                    </div>
+                </div>
+                <div class="header-meta">
+                    <div class="status">
+                        <span class="status-dot"></span>
+                        <span class="status-text">Live</span>
+                    </div>
+                    <span class="last-update" id="lastUpdate">Loading...</span>
+                    <button class="refresh-btn" onclick="refreshData()" aria-label="Refresh">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="23 4 23 10 17 10"></polyline>
+                            <polyline points="1 20 1 14 7 14"></polyline>
+                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                        </svg>
+                        <span>Refresh</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Hero stats -->
+        <section class="stats">
+            <div class="stat-card">
+                <div class="stat-label">Total Articles</div>
+                <div class="stat-value" id="totalArticles">—</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Categories</div>
+                <div class="stat-value">6</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Sources</div>
+                <div class="stat-value" id="totalSources">—</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Updated</div>
+                <div class="stat-value" id="updateFreq">6h</div>
+            </div>
+        </section>
+
+        <!-- Category filter tabs -->
+        <section class="filters">
+            <div class="filter-scroll">
+                <button class="chip active" data-category="all">
+                    <span class="chip-icon">⚡</span> All
+                </button>
+                <button class="chip" data-category="ai-coding">
+                    <span class="chip-icon">🤖</span> AI Coding
+                </button>
+                <button class="chip" data-category="testing">
+                    <span class="chip-icon">🧪</span> Testing & QA
+                </button>
+                <button class="chip" data-category="microservices">
+                    <span class="chip-icon">🌐</span> Microservices
+                </button>
+                <button class="chip" data-category="fintech">
+                    <span class="chip-icon">💳</span> Fintech
+                </button>
+                <button class="chip" data-category="devprod">
+                    <span class="chip-icon">🚀</span> Dev Productivity
+                </button>
+                <button class="chip" data-category="security">
+                    <span class="chip-icon">🔒</span> Security
+                </button>
+            </div>
+        </section>
+
+        <!-- News grid -->
+        <main class="content">
+            <div class="news-grid" id="newsGrid">
+                <!-- Loading skeletons -->
+                <div class="skeleton"></div>
+                <div class="skeleton"></div>
+                <div class="skeleton"></div>
+                <div class="skeleton"></div>
+                <div class="skeleton"></div>
+                <div class="skeleton"></div>
+            </div>
+
+            <div class="empty-state hidden" id="emptyState">
+                <div class="empty-icon">📰</div>
+                <h3>No articles in this category yet</h3>
+                <p>Check back soon — data refreshes every 6 hours</p>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-content">
+                <p class="footer-tag">Powered by <strong>NewsAPI</strong> · Auto-deployed by <strong>GitHub Actions</strong></p>
+                <a href="https://github.com/kadamhemant/dev-pulse" target="_blank" rel="noopener" class="footer-link">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                    </svg>
+                    View Source
+                </a>
+            </div>
+        </footer>
+    </div>
+
+    <script src="dashboard.js"></script>
+</body>
+</html>
