@@ -14,32 +14,51 @@ NEWS_API_KEY = os.getenv('NEWS_API_KEY')
 DATA_DIR = Path(__file__).parent / "data"
 
 # Specialized queries for each engineer-focused category
+# Strategy: scope each query with technical/engineering context to filter noise
 CATEGORIES = {
     'ai-coding': {
-        'query': '"GitHub Copilot" OR "Claude Code" OR "Cursor IDE" OR "Windsurf" OR "Codeium" OR "AI coding assistant" OR "Copilot CLI"',
+        'query': '("GitHub Copilot" OR "Claude Code" OR "Cursor" OR "Windsurf" OR "Codeium" OR "AI coding assistant" OR "Copilot CLI" OR "AI pair programming") AND (developer OR coding OR programming OR IDE OR software)',
         'limit': 8
     },
     'testing': {
-        'query': '("AI testing" OR "test automation" OR "Playwright" OR "Selenium" OR "Cypress" OR "self-healing tests" OR "visual regression") AND (software OR engineering)',
+        'query': '("test automation" OR "AI testing" OR "Playwright" OR "Cypress" OR "self-healing tests" OR "visual regression testing" OR "end-to-end testing") AND (software OR developer OR engineering OR QA)',
         'limit': 6
     },
     'microservices': {
-        'query': '"microservices" OR "service mesh" OR "Istio" OR "Linkerd" OR "OpenTelemetry" OR "API gateway" OR "distributed systems"',
+        'query': '("microservices" OR "service mesh" OR "Istio" OR "Linkerd" OR "OpenTelemetry" OR "API gateway" OR "Kubernetes" OR "distributed systems") AND (architecture OR engineering OR developer OR cloud)',
         'limit': 6
     },
     'fintech': {
-        'query': '("Stripe" OR "Mastercard" OR "Visa" OR "Adyen" OR "PayPal" OR "FedNow" OR "real-time payments" OR "PCI DSS" OR "tokenization") AND (engineering OR developer OR API OR security)',
+        'query': '("Stripe API" OR "payment infrastructure" OR "FedNow" OR "real-time payments" OR "PCI DSS" OR "tokenization" OR "3D Secure" OR "payment processing") AND (engineering OR developer OR API OR security OR technical)',
         'limit': 6
     },
     'devprod': {
-        'query': '"developer productivity" OR "platform engineering" OR "Backstage" OR "DORA metrics" OR "internal developer platform" OR "CI/CD"',
+        'query': '("developer productivity" OR "platform engineering" OR "Backstage" OR "DORA metrics" OR "internal developer platform" OR "CI/CD pipeline" OR "GitHub Actions") AND (software OR engineering OR developer OR DevOps)',
         'limit': 6
     },
     'security': {
-        'query': '"supply chain attack" OR "npm vulnerability" OR "PyPI package" OR "CVE" OR "secrets management" OR "prompt injection" OR "AI security"',
+        'query': '("supply chain attack" OR "npm vulnerability" OR "PyPI package" OR "CVE" OR "secrets management" OR "prompt injection" OR "AI security" OR "zero-day") AND (developer OR software OR security OR vulnerability)',
         'limit': 8
     }
 }
+
+# Filter out articles whose title doesn't actually contain technical/engineering terms
+RELEVANCE_KEYWORDS = {
+    'ai-coding': ['copilot', 'claude', 'cursor', 'windsurf', 'codeium', 'ai', 'code', 'coding', 'developer', 'programming', 'ide', 'llm', 'chatgpt', 'github'],
+    'testing': ['test', 'qa', 'playwright', 'cypress', 'selenium', 'automation', 'regression', 'quality'],
+    'microservices': ['microservice', 'service', 'mesh', 'istio', 'linkerd', 'kubernetes', 'k8s', 'api', 'gateway', 'opentelemetry', 'observability', 'distributed', 'cloud', 'docker', 'container'],
+    'fintech': ['payment', 'stripe', 'mastercard', 'visa', 'adyen', 'paypal', 'fednow', 'pci', 'tokenization', '3ds', 'fintech', 'finance', 'banking'],
+    'devprod': ['developer', 'productivity', 'platform', 'backstage', 'dora', 'ci/cd', 'devops', 'pipeline', 'engineering', 'github actions'],
+    'security': ['security', 'vulnerability', 'cve', 'attack', 'breach', 'exploit', 'malware', 'npm', 'pypi', 'supply chain', 'prompt injection', 'zero-day', 'hack']
+}
+
+def is_relevant(article, category):
+    """Check if article title actually contains category-relevant keywords"""
+    keywords = RELEVANCE_KEYWORDS.get(category, [])
+    if not keywords:
+        return True
+    text = (article.get('title', '') + ' ' + (article.get('description') or '')).lower()
+    return any(kw in text for kw in keywords)
 
 def fetch_category_news(category_key, query, limit):
     """Fetch news for a single category"""
@@ -52,11 +71,12 @@ def fetch_category_news(category_key, query, limit):
         from_date = (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d')
 
         url = "https://newsapi.org/v2/everything"
+        # Fetch more than limit to leave room for relevance filtering
         params = {
             'q': query,
             'sortBy': 'publishedAt',
             'language': 'en',
-            'pageSize': limit,
+            'pageSize': min(limit * 3, 30),
             'from': from_date,
             'apiKey': NEWS_API_KEY
         }
@@ -70,6 +90,10 @@ def fetch_category_news(category_key, query, limit):
         items = []
         for article in articles:
             if not article.get('title') or article.get('title') == '[Removed]':
+                continue
+
+            # Filter out articles that don't match category-specific keywords
+            if not is_relevant(article, category_key):
                 continue
 
             published_at = article.get('publishedAt', '')
@@ -90,7 +114,9 @@ def fetch_category_news(category_key, query, limit):
                 'published_at': published_at
             })
 
-        print(f"✅ {category_key}: fetched {len(items)} articles")
+        # Trim to requested limit after relevance filtering
+        items = items[:limit]
+        print(f"✅ {category_key}: fetched {len(items)} relevant articles")
         return items
 
     except Exception as e:
